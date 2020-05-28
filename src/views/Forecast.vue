@@ -41,6 +41,7 @@ export default {
       messages: [],
       query: '',
       showLoading: false,
+
     }
   },
   created () {
@@ -48,7 +49,7 @@ export default {
 
     let cacheLabel = 'forecast_' + this.$route.params.cityId;
 
-    /*let cacheExpiry = 15 * 60 * 1000;*/
+    let cacheExpiry = 15 * 60 * 1000;
 
     if (this.$ls.get(cacheLabel)) {
       console.log('Cached value detected.');
@@ -56,29 +57,30 @@ export default {
       this.showLoading = false;
     } else {
       console.log('No cache detected. Making API request.');
-
-    API.get('forecast', {
-      params: {
-          id: this.$route.params.cityId
-      }
-    })
-    .then(response => {
-      this.showLoading = false;
-      this.weatherData = response.data;
-    })
-    .catch(error => {
-      this.showLoading = false;
-      this.messages.push({
-        type: 'error',
-        text: error.message
+      API.get('forecast', {
+        params: {
+            id: this.$route.params.cityId
+        }
+      })
+      .then(response => {
+        this.$ls.set(cacheLabel, response.data, cacheExpiry);
+        this.showLoading = false;
+        this.weatherData = response.data;
+      })
+      .catch(error => {
+        this.showLoading = false;
+        this.messages.push({
+          type: 'error',
+          text: error.message
+        });
       });
-    });
     }
   },
   filters: {
     formatDate: function (timestamp){
       let date = new Date(timestamp * 1000);
       const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
       let daynum = date.getDate();
       let month = date.getMonth();
 
